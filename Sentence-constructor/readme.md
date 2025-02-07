@@ -2,7 +2,7 @@
 
 ### Which Model
 
-Meta.ai is using Llama 3 70B
+Meta.ai is using Llama 3 70B parameters
 
 https://huggingface.co/meta-llama/Meta-Llama-3-70B
 
