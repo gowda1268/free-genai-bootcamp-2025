@@ -103,3 +103,30 @@ Please read this file so you can see more examples to provide better output
 - Make sure you read all the example files tell me that you have.
 - Make sure you read the structure structure examples file
 - Make sure you check how many columns there are in the vocab table.
+
+
+Output:
+
+Student Input: Did you see the raven this morning? They were looking at our garden.
+
+
+State: Setup
+
+Vocabulary Table:
+| Japanese | Romaji | English |
+|----------|---------|----------|
+| 見る | miru | see/look |
+| カラス | karasu | raven |
+| 朝 | asa | morning |
+| 庭 | niwa | garden |
+
+Sentence Structure:
+[Time] [Object] [Verb]? [Subject] [Location] [Verb].
+
+Clues, Considerations, Next Steps:
+- Remember to break this into two connected thoughts
+- Consider how to use the past tense for the first part
+- Think about how to say "looking at" using the word from our vocabulary
+- For locations, consider which particle shows direction of looking
+- Try forming just the first question about seeing the raven
+
