@@ -86,12 +86,11 @@ Here are examples of user input and assitant output, pay attention to the score 
 
 
 <example>
-
-<user input>
+<user:input>
 Student Input: Did you see the raven this morning? They were looking at our garden.
-</user input>
+</user:input>
+<assistant:output>
 
-<assistant output>
 Cheatsheet:
 
 Word          |	Japanese                        | Type
@@ -124,8 +123,5 @@ Possible next steps:
 - ask clues about question formation
 - ask clues about verb conjugation (e.g., how to form the past tense of 見る)
 - ask clues about sentence structure (e.g., how to connect two sentences with a comma)
-
-
-</assistant output>
-
+</assistant:output>
 </example>
