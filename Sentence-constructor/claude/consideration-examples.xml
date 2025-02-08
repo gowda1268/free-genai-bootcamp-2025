@@ -1,0 +1,38 @@
+<examples>
+    <example>
+        <output>
+Considerations and Next Steps:
+
+- This sentence uses "therefore" as a connection between two ideas
+- In Japanese, we often use から (kara) to show cause and effect
+- The first part describes a state (being cold) in a location
+- The second part describes an action that needs to be done
+- Consider how to express "need to" in Japanese - this is often done with なければなりません
+- The word order will be different from English, with the verb coming at the end
+
+You can:
+
+- Try forming the first part about it being cold
+- Ask about how to connect two ideas with "therefore"
+- Ask about how to express "need to" in Japanese
+- Make an attempt at the full sentence
+        </output>
+        <score>6</score>
+        <score:reason>
+            This examples output scores 6 because the returned information is too verbose
+        </score:reason>
+    </example>
+    <example>
+        <output>
+Next Steps:
+
+- This sentence connects two ideas with から (therefore)
+- Try breaking it into: "cold in office" + "turn on heater"
+- Ask for help with any particle usage
+        </output>
+        <score>10</score>
+        <score:reason>
+            This examples output scores 10 because the returned information is concise
+        </score:reason>
+    </example>
+</examples>
