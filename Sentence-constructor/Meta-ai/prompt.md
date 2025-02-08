@@ -87,14 +87,14 @@ Here are examples of user input and assitant output, pay attention to the score 
 
 
 
-<example:3>
+<example>
 <user:input>
 Student Input: Did you see the raven this morning? They were looking at our garden.
 </user:input>
 
-<score:reasons>
+<score_reasons>
 --bad : it included A possible translation of english word to japanese.
-</score:reasons>
+</score_reasons>
 
 <assistant:output>
 
@@ -112,9 +112,6 @@ you          |	あなた (anata)	                |Pronoun
 Sentence structure:
 [Location] [Subject] [Verb], [Object] [Verb-past]?
 
-
-
-
 A possible translation could be:
 -- "今朝、カラスを見た？彼らは私たちの庭を見ていた。"
 
@@ -129,7 +126,5 @@ Next steps:
 - ask clues about how to connect two sentences
 - ask clues about question formation
 - ask clues about verb conjugation
-
-
 </assistant:output>
-</example:3>
+</example>
