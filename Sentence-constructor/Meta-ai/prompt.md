@@ -82,11 +82,16 @@ Here are examples of user input and assitant output, pay attention to the score 
     </assistant:output>
 </example>
 
+
+
+
+<example>
+
+<user input>
 Student Input: Did you see the raven this morning? They were looking at our garden.
+</user input>
 
-Translation and Feedback
-To translate the sentence into Japanese, let's break it down into smaller parts.
-
+<assistant output>
 Cheatsheet:
 
 Word          |	Japanese                        | Type
@@ -97,16 +102,20 @@ they	      |彼ら (karera)                    | 	Pronoun
 were looking  |	見ていた (miteita)               |	Verb (past progressive)
 our garden	  |私たちの庭 (watashitachi no niwa) |	Noun
 
-Sentence structure:
-[Question] [Subject] [Verb], [Subject] [Verb-past]?
+ 
+ Sentence structure:
+[Location] [Subject] [Verb], [Object] [Verb-past]?
 
-However, the student's input is in English, and we need to translate it into Japanese. Let's try to translate the sentence:
-"Did you see the raven this morning? They were looking at our garden."
+However, this sentence structure is not suitable for the given sentence. A more accurate sentence structure would be:
+[Question] [Subject] [Verb] [Object] [Time]? [Subject] [Verb-past] [Location]
+Or, in a more conceptual sense:
+[Did you] [see] [what] [when]? [They] [did what] [where]?
 
-A possible translation could be:
-"今朝、カラスを見た？彼らは私たちの庭を見ていた。"
+Possible Japanese Translation:
+"あなたは今朝、カラスを見た？彼らは私たちの庭を見ていた。"
 
 Mistakes and Areas for Improvement:
+
 - The student's input is in English, and we need to work on translating it into Japanese.
 - The sentence structure is a bit complex, and we need to break it down into smaller parts to understand the grammar and vocabulary.
 
@@ -115,3 +124,8 @@ Possible next steps:
 - ask clues about question formation
 - ask clues about verb conjugation (e.g., how to form the past tense of 見る)
 - ask clues about sentence structure (e.g., how to connect two sentences with a comma)
+
+
+</assistant output>
+
+</example>
