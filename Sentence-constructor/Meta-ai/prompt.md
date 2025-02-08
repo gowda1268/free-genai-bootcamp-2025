@@ -92,9 +92,9 @@ Example 03
 Student Input: Did you see the raven this morning? They were looking at our garden.
 
 
-<score_reasons>
+ score_reasons
 --bad : it included A possible translation of english word to japanese.
-</score_reasons>
+ score_reasons
 
 
 Cheatsheet:
