@@ -87,16 +87,15 @@ Here are examples of user input and assitant output, pay attention to the score 
 
 
 
-<example>
-<user:input>
+Example 03
+
 Student Input: Did you see the raven this morning? They were looking at our garden.
-</user:input>
+
 
 <score_reasons>
 --bad : it included A possible translation of english word to japanese.
 </score_reasons>
 
-<assistant:output>
 
 Cheatsheet:
 
@@ -126,5 +125,4 @@ Next steps:
 - ask clues about how to connect two sentences
 - ask clues about question formation
 - ask clues about verb conjugation
-</assistant:output>
-</example>
+
