@@ -51,3 +51,39 @@ Here is an example of simple sentence structures.
 - talk about the vocabulary but try to leave out the japanese words because the student can refer to the vocabulary table.
 
 
+
+Input 
+
+Student Input: Did you see the raven this morning? They were looking at our garden.
+
+### Vocabulary Table  
+
+| Japanese  | Romaji    | English         |  
+|-----------|----------|----------------|  
+| 今朝       | kesa      | this morning   |  
+| あなた    | anata     | you            |  
+| 見る      | miru      | to see         |  
+| ワタリガラス | watarigarasu | raven         |  
+| 彼ら       | karera    | they           |  
+| 見る      | miru      | to look at     |  
+| 私たち    | watashitachi | we/our       |  
+| 庭        | niwa      | garden         |  
+
+---
+
+### Sentence Structure  
+
+1. **[Time] [Subject] [Object] [Verb]? 
+2. **[Subject] [Verb] [Location].
+
+---
+
+### Clues and Considerations  
+
+- The first sentence is a **question**, so you need to use the correct verb form and ending to indicate a question.  
+- The verb **"to see"** needs to be conjugated into the past tense.  
+- The second sentence describes an **ongoing action in the past**, so think about how to express continuous past action.  
+- The word **"they"** refers to people or animals, so pick the right pronoun from the vocabulary list.  
+- **"Our garden"** uses a possessive structure, so you need to indicate possession correctly.  
+- Pay attention to the particles needed for objects and locations.  
+
