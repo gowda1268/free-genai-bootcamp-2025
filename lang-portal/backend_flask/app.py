@@ -1,6 +1,6 @@
 from flask import Flask, g, jsonify
 from flask_cors import CORS
-from backend_flask.lib.db import Db
+from backend_flask.lib.db import db
 
 from backend_flask.routes.words import words_bp
 from backend_flask.routes.groups import groups_bp
@@ -22,7 +22,6 @@ def create_app(test_config=None):
     print(f"Using database: {app.config['DATABASE']}")
     try:
         # Initialize the database
-        db = Db(app, app.config['DATABASE'])
         db.init_app(app)
         print("Database connection established successfully")
     except Exception as e:

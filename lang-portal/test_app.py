@@ -8,6 +8,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from backend_flask.app import create_app
 from backend_flask.lib.db import Db
 
+db = Db()
+
 @pytest.fixture
 def app():
     app = create_app({
@@ -16,7 +18,8 @@ def app():
     })
     with app.app_context():
         # Initialize the database
-        app.db.setup_tables()
+        db.init_app(app)
+        db.setup_tables()
     yield app
 
 @pytest.fixture
@@ -177,12 +180,25 @@ def test_reset_study_sessions(client):
     assert len(sessions.get_json()) == 0
 
 def test_get_study_activities(client):
+    # First create a study activity
+    activity_data = {
+        "name": "Flashcards",
+        "url": "https://example.com/flashcards",
+        "preview_url": "https://example.com/flashcards/preview"
+    }
+    response = client.post('/api/study-activities', json=activity_data)
+    assert response.status_code == 201
+
+    # Now get the activities
     response = client.get('/api/study-activities')
     assert response.status_code == 200
     data = response.get_json()
     assert isinstance(data, list)
     assert len(data) > 0
+    
+    # Verify the response format
     for activity in data:
         assert 'id' in activity
-        assert 'name' in activity
-        assert 'url' in activity
+        assert 'title' in activity
+        assert 'launch_url' in activity
+        assert 'preview_url' in activity
