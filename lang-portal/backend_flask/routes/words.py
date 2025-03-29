@@ -1,10 +1,12 @@
-<<<<<<< HEAD
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
-from lib.db import db
+from backend_flask.lib.db import db
+
+# Create the blueprint
+words_bp = Blueprint('words', __name__)
 
 # Export the blueprint
-words_bp = Blueprint('words', __name__)
+__all__ = ['words_bp']
 
 @words_bp.route('/api/words', methods=['POST'])
 @cross_origin()
@@ -41,19 +43,20 @@ def create_word():
             if word:
                 word_dict = dict(word)
                 print(f"Created word: {word_dict['kanji']}")
-                return jsonify({'word': {
-                    'id': word_dict['id'],
-                    'kanji': word_dict['kanji'],
-                    'romaji': word_dict['romaji'],
-                    'english': word_dict['english'],
-                    'parts': word_dict['parts']
-                }}), 201
+                return jsonify({
+                    'word': {
+                        'id': word_dict['id'],
+                        'kanji': word_dict['kanji'],
+                        'romaji': word_dict['romaji'],
+                        'english': word_dict['english'],
+                        'parts': word_dict['parts']
+                    }
+                }), 201
             else:
                 return jsonify({'error': 'Word creation failed'}), 500
         finally:
             cursor.close()
     except Exception as e:
-        print(f"Error creating word: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @words_bp.route('/api/words/<int:word_id>', methods=['GET'])
@@ -85,14 +88,54 @@ def get_word(word_id):
 def update_word(word_id):
     try:
         data = request.get_json()
+        if not data or not isinstance(data, dict):
+            return jsonify({'error': 'Invalid request data'}), 400
+
+        # Get current word data
         cursor = db.cursor()
+        cursor.execute('SELECT * FROM words WHERE id = ?', (word_id,))
+        current_word = cursor.fetchone()
+        
+        if not current_word:
+            return jsonify({'error': 'Word not found'}), 404
+
+        # Prepare update query and parameters
+        updates = []
+        params = []
+        
+        if 'kanji' in data:
+            updates.append('kanji = ?')
+            params.append(data['kanji'])
+        if 'romaji' in data:
+            updates.append('romaji = ?')
+            params.append(data['romaji'])
+        if 'english' in data:
+            updates.append('english = ?')
+            params.append(data['english'])
+        if 'parts' in data:
+            updates.append('parts = ?')
+            params.append(data['parts'])
+        
+        if not updates:
+            return jsonify({'error': 'No fields to update'}), 400
+
+        # Add word_id to parameters
+        params.append(word_id)
+
         try:
-            cursor.execute('''
-                UPDATE words SET kanji = ?, romaji = ?, english = ?, parts = ?
-                WHERE id = ?
-            ''', (data['kanji'], data['romaji'], data['english'], data['parts'], word_id))
+            # Build and execute update query
+            update_query = f"UPDATE words SET {', '.join(updates)} WHERE id = ?"
+            cursor.execute(update_query, params)
             db.commit()
-            return jsonify({'message': 'Word updated successfully'})
+            
+            # Get updated word
+            cursor.execute('SELECT * FROM words WHERE id = ?', (word_id,))
+            updated_word = cursor.fetchone()
+            
+            return jsonify({
+                'message': 'Word updated successfully',
+                'word': dict(updated_word)
+            })
         finally:
             cursor.close()
     except Exception as e:
@@ -123,7 +166,7 @@ def list_words():
         sort_by = request.args.get('sort_by', 'kanji')
         order = request.args.get('order', 'asc')
         
-        allowed_sort_fields = ['kanji', 'romaji', 'english', 'correct_count', 'wrong_count']
+        allowed_sort_fields = ['kanji', 'romaji', 'english']
         if sort_by not in allowed_sort_fields:
             return jsonify({'error': f'Invalid sort_by field. Must be one of: {allowed_sort_fields}'}), 400
             
@@ -139,8 +182,8 @@ def list_words():
             # Get words with pagination and sorting
             cursor.execute(f'''
                 SELECT w.*, 
-                       (SELECT COUNT(*) FROM word_review_items WHERE word_id = w.id AND correct = 1) as correct_count,
-                       (SELECT COUNT(*) FROM word_review_items WHERE word_id = w.id AND correct = 0) as wrong_count
+                       (SELECT COUNT(*) FROM word_review_items WHERE word_id = w.id AND status = 'correct') as correct_count,
+                       (SELECT COUNT(*) FROM word_review_items WHERE word_id = w.id AND status = 'incorrect') as wrong_count
                 FROM words w
                 ORDER BY {sort_by} {order}
                 LIMIT ? OFFSET ?
@@ -161,127 +204,3 @@ def list_words():
 
 # Export the blueprint
 __all__ = ['words_bp']
-=======
-from flask import request, jsonify, g
-from flask_cors import cross_origin
-import json
-
-def load(app):
-  # Endpoint: GET /words with pagination (50 words per page)
-  @app.route('/words', methods=['GET'])
-  @cross_origin()
-  def get_words():
-    try:
-      cursor = app.db.cursor()
-
-      # Get the current page number from query parameters (default is 1)
-      page = int(request.args.get('page', 1))
-      # Ensure page number is positive
-      page = max(1, page)
-      words_per_page = 50
-      offset = (page - 1) * words_per_page
-
-      # Get sorting parameters from the query string
-      sort_by = request.args.get('sort_by', 'kanji')  # Default to sorting by 'kanji'
-      order = request.args.get('order', 'asc')  # Default to ascending order
-
-      # Validate sort_by and order
-      valid_columns = ['kanji', 'romaji', 'english', 'correct_count', 'wrong_count']
-      if sort_by not in valid_columns:
-        sort_by = 'kanji'
-      if order not in ['asc', 'desc']:
-        order = 'asc'
-
-      # Query to fetch words with sorting
-      cursor.execute(f'''
-        SELECT w.id, w.kanji, w.romaji, w.english, 
-            COALESCE(r.correct_count, 0) AS correct_count,
-            COALESCE(r.wrong_count, 0) AS wrong_count
-        FROM words w
-        LEFT JOIN word_reviews r ON w.id = r.word_id
-        ORDER BY {sort_by} {order}
-        LIMIT ? OFFSET ?
-      ''', (words_per_page, offset))
-
-      words = cursor.fetchall()
-
-      # Query the total number of words
-      cursor.execute('SELECT COUNT(*) FROM words')
-      total_words = cursor.fetchone()[0]
-      total_pages = (total_words + words_per_page - 1) // words_per_page
-
-      # Format the response
-      words_data = []
-      for word in words:
-        words_data.append({
-          "id": word["id"],
-          "kanji": word["kanji"],
-          "romaji": word["romaji"],
-          "english": word["english"],
-          "correct_count": word["correct_count"],
-          "wrong_count": word["wrong_count"]
-        })
-
-      return jsonify({
-        "words": words_data,
-        "total_pages": total_pages,
-        "current_page": page,
-        "total_words": total_words
-      })
-
-    except Exception as e:
-      return jsonify({"error": str(e)}), 500
-    finally:
-      app.db.close()
-
-  # Endpoint: GET /words/:id to get a single word with its details
-  @app.route('/words/<int:word_id>', methods=['GET'])
-  @cross_origin()
-  def get_word(word_id):
-    try:
-      cursor = app.db.cursor()
-      
-      # Query to fetch the word and its details
-      cursor.execute('''
-        SELECT w.id, w.kanji, w.romaji, w.english,
-               COALESCE(r.correct_count, 0) AS correct_count,
-               COALESCE(r.wrong_count, 0) AS wrong_count,
-               GROUP_CONCAT(DISTINCT g.id || '::' || g.name) as groups
-        FROM words w
-        LEFT JOIN word_reviews r ON w.id = r.word_id
-        LEFT JOIN word_groups wg ON w.id = wg.word_id
-        LEFT JOIN groups g ON wg.group_id = g.id
-        WHERE w.id = ?
-        GROUP BY w.id
-      ''', (word_id,))
-      
-      word = cursor.fetchone()
-      
-      if not word:
-        return jsonify({"error": "Word not found"}), 404
-      
-      # Parse the groups string into a list of group objects
-      groups = []
-      if word["groups"]:
-        for group_str in word["groups"].split(','):
-          group_id, group_name = group_str.split('::')
-          groups.append({
-            "id": int(group_id),
-            "name": group_name
-          })
-      
-      return jsonify({
-        "word": {
-          "id": word["id"],
-          "kanji": word["kanji"],
-          "romaji": word["romaji"],
-          "english": word["english"],
-          "correct_count": word["correct_count"],
-          "wrong_count": word["wrong_count"],
-          "groups": groups
-        }
-      })
-      
-    except Exception as e:
-      return jsonify({"error": str(e)}), 500
->>>>>>> 704c651a134e70ae6424883b8faed7b515bdd8b0

@@ -1,6 +1,12 @@
 import pytest
-from ..backend_flask.app import create_app
-from ..backend_flask.lib.db import Db
+import sys
+import os
+
+# Add the project root to Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from backend_flask.app import create_app
+from backend_flask.lib.db import Db
 
 @pytest.fixture
 def app():
