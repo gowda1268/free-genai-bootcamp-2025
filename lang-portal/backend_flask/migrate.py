@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 from lib.db import Db
+=======
+>>>>>>> 704c651a134e70ae6424883b8faed7b515bdd8b0
 import sqlite3
 import os
 
@@ -21,6 +24,7 @@ def run_migrations():
                 conn.executescript(migration_sql)
                 conn.commit()
         
+<<<<<<< HEAD
         # Add study_activities table if it doesn't exist
         conn.execute('''
             CREATE TABLE IF NOT EXISTS study_activities (
@@ -57,6 +61,8 @@ def run_migrations():
         ''')
         
         conn.commit()
+=======
+>>>>>>> 704c651a134e70ae6424883b8faed7b515bdd8b0
         print("Migrations completed successfully")
     except Exception as e:
         print(f"Error running migrations: {str(e)}")
