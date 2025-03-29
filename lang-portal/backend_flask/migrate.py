@@ -1,3 +1,4 @@
+from lib.db import Db
 import sqlite3
 import os
 
@@ -20,6 +21,42 @@ def run_migrations():
                 conn.executescript(migration_sql)
                 conn.commit()
         
+        # Add study_activities table if it doesn't exist
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS study_activities (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                url TEXT NOT NULL,
+                preview_url TEXT
+            )
+        ''')
+        
+        # Update study_sessions table
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS study_sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                study_activity_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (group_id) REFERENCES groups(id),
+                FOREIGN KEY (study_activity_id) REFERENCES study_activities(id)
+            )
+        ''')
+        
+        # Create word_review_items table
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS word_review_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                word_id INTEGER NOT NULL,
+                study_session_id INTEGER NOT NULL,
+                correct BOOLEAN NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (word_id) REFERENCES words(id),
+                FOREIGN KEY (study_session_id) REFERENCES study_sessions(id)
+            )
+        ''')
+        
+        conn.commit()
         print("Migrations completed successfully")
     except Exception as e:
         print(f"Error running migrations: {str(e)}")

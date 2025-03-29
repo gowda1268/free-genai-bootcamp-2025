@@ -1,12 +1,55 @@
-from flask import request, jsonify
+from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
-from lib.db import db  # Changed from relative to absolute import
-def register_routes(app):
-    @app.route('/dashboard/recent-session', methods=['GET'])
-    @cross_origin()
-    def get_recent_session():
+from lib.db import db
+
+# Export the blueprint
+dashboard_bp = Blueprint('dashboard', __name__)
+
+@dashboard_bp.route('/api/dashboard', methods=['GET'])
+@cross_origin()
+def get_dashboard():
+    try:
+        cursor = db.cursor()
         try:
-            cursor = app.db.cursor()
+            # Get total words
+            cursor.execute('SELECT COUNT(*) as total_words FROM words')
+            total_words = cursor.fetchone()['total_words']
+            
+            # Get total groups
+            cursor.execute('SELECT COUNT(*) as total_groups FROM groups')
+            total_groups = cursor.fetchone()['total_groups']
+            
+            # Get total study sessions
+            cursor.execute('SELECT COUNT(*) as total_sessions FROM study_sessions')
+            total_sessions = cursor.fetchone()['total_sessions']
+            
+            # Get total correct and wrong reviews
+            cursor.execute('''
+                SELECT 
+                    SUM(CASE WHEN correct = 1 THEN 1 ELSE 0 END) as correct_reviews,
+                    SUM(CASE WHEN correct = 0 THEN 1 ELSE 0 END) as wrong_reviews
+                FROM word_review_items
+            ''')
+            review_stats = cursor.fetchone()
+            
+            return jsonify({
+                'total_words': total_words,
+                'total_groups': total_groups,
+                'total_study_sessions': total_sessions,
+                'correct_reviews': review_stats['correct_reviews'] or 0,
+                'wrong_reviews': review_stats['wrong_reviews'] or 0
+            }), 200
+        finally:
+            cursor.close()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/dashboard/recent-session', methods=['GET'])
+@cross_origin()
+def get_recent_session():
+    try:
+        cursor = db.cursor()
+        try:
             cursor.execute('''
                 SELECT 
                     ss.id,
@@ -28,13 +71,40 @@ def register_routes(app):
             if not session:
                 return jsonify(None)
             
+            return jsonify(dict(session))
+        finally:
+            cursor.close()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/dashboard/stats', methods=['GET'])
+@cross_origin()
+def get_stats():
+    try:
+        cursor = db.cursor()
+        try:
+            # Get total words
+            cursor.execute('SELECT COUNT(*) as total_words FROM words')
+            total_words = cursor.fetchone()['total_words']
+            
+            # Get total correct and wrong reviews
+            cursor.execute('''
+                SELECT 
+                    SUM(CASE WHEN correct = 1 THEN 1 ELSE 0 END) as total_correct,
+                    SUM(CASE WHEN correct = 0 THEN 1 ELSE 0 END) as total_wrong
+                FROM word_review_items
+            ''')
+            reviews = cursor.fetchone()
+            
             return jsonify({
-                "id": session["id"],
-                "group_id": session["group_id"],
-                "activity_name": session["activity_name"],
-                "created_at": session["created_at"],
-                "correct_count": session["correct_count"],
-                "wrong_count": session["wrong_count"]
+                'total_words': total_words,
+                'total_correct': reviews['total_correct'] or 0,
+                'total_wrong': reviews['total_wrong'] or 0
             })
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        finally:
+            cursor.close()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Export the blueprint
+__all__ = ['dashboard_bp']

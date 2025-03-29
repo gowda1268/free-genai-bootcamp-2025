@@ -1,144 +1,96 @@
 import sqlite3
-import json
 from flask import g
 
 class Db:
-    def __init__(self, database='words.db'):
+    def __init__(self, app=None, database='words.db'):
         self.database = database
-        self.connection = None
+        self.app = app
+        if app is not None:
+            self.init_app(app)
 
-    def get(self):
+    def init_app(self, app):
+        self.app = app
+        app.teardown_appcontext(self.close)
+
+    def get_db(self):
         if 'db' not in g:
-            g.db = sqlite3.connect(self.database)
-            g.db.row_factory = sqlite3.Row  # Return rows as dictionaries
+            g.db = sqlite3.connect(
+                self.database,
+                detect_types=sqlite3.PARSE_DECLTYPES
+            )
+            g.db.row_factory = sqlite3.Row
         return g.db
 
-    def commit(self):
-        self.get().commit()
-
-    def cursor(self):
-        # Ensure the connection is valid before getting a cursor
-        connection = self.get()
-        return connection.cursor()
-
-    def close(self):
+    def close(self, e=None):
         db = g.pop('db', None)
         if db is not None:
             db.close()
 
-    # Function to load SQL from a file
-    def sql(self, filepath):
-        with open('sql/' + filepath, 'r') as file:
-            return file.read()
+    def execute(self, statement, args=()):
+        db = self.get_db()
+        return db.execute(statement, args)
 
-    # Function to load the words from a JSON file
-    def load_json(self, filepath):
-        with open(filepath, 'r') as file:
-            return json.load(file)
+    def commit(self):
+        db = self.get_db()
+        db.commit()
 
-    def setup_tables(self, cursor):
-        # Create the necessary tables
-        cursor.execute(self.sql('setup/create_table_words.sql'))
-        self.get().commit()
+    def cursor(self):
+        return self.get_db().cursor()
 
-        cursor.execute(self.sql('setup/create_table_word_reviews.sql'))
-        self.get().commit()
-
-        cursor.execute(self.sql('setup/create_table_word_review_items.sql'))
-        self.get().commit()
-
-        cursor.execute(self.sql('setup/create_table_groups.sql'))
-        self.get().commit()
-
-        cursor.execute(self.sql('setup/create_table_word_groups.sql'))
-        self.get().commit()
-
-        cursor.execute(self.sql('setup/create_table_study_activities.sql'))
-        self.get().commit()
-
-        cursor.execute(self.sql('setup/create_table_study_sessions.sql'))
-        self.get().commit()
-
-    def import_study_activities_json(self, cursor, data_json_path):
-        study_activities = self.load_json(data_json_path)
-        for activity in study_activities:
-            cursor.execute('''
-            INSERT INTO study_activities (name, url, preview_url) VALUES (?, ?, ?)
-            ''', (activity['name'], activity['url'], activity['preview_url'],))
-        self.get().commit()
-
-    def import_word_json(self, cursor, group_name, data_json_path):
-        # Insert a new group
-        cursor.execute('''
-            INSERT INTO groups (name) VALUES (?)
-        ''', (group_name,))
-        self.get().commit()
-
-        # Get the ID of the group
-        cursor.execute('SELECT id FROM groups WHERE name = ?', (group_name,))
-        core_verbs_group_id = cursor.fetchone()[0]
-
-        # Insert some sample words (verbs) from JSON file and associate with the group
-        words = self.load_json(data_json_path)
-
-        for word in words:
-            # Insert the word into the words table
-            cursor.execute('''
-                INSERT INTO words (kanji, romaji, english, parts) VALUES (?, ?, ?, ?)
-            ''', (word['kanji'], word['romaji'], word['english'], json.dumps(word['parts'])))
-            
-            # Get the last inserted word's ID
-            word_id = cursor.lastrowid
-
-            # Insert the word-group relationship into word_groups table
-            cursor.execute('''
-                INSERT INTO word_groups (word_id, group_id) VALUES (?, ?)
-            ''', (word_id, core_verbs_group_id))
-        self.get().commit()
-
-        # Update the words_count in the groups table
-        cursor.execute('''
-            UPDATE groups
-            SET words_count = (
-                SELECT COUNT(*) FROM word_groups WHERE group_id = ?
-            )
-            WHERE id = ?
-        ''', (core_verbs_group_id, core_verbs_group_id))
-
-        self.get().commit()
-
-        print(f"Successfully added {len(words)} verbs to the '{group_name}' group.")
-
-    def create_study_session_in_db(self, group_id, study_activity_id):
-        cursor = self.cursor()
-        cursor.execute('INSERT INTO study_sessions (group_id, study_activity_id) VALUES (?, ?)', (group_id, study_activity_id))
-        self.commit()
-        return cursor.lastrowid  # Return the ID of the newly created session
-
-    def log_review_in_db(self, session_id, word_id, correct):
-        cursor = self.cursor()
-        cursor.execute('INSERT INTO word_review_items (study_session_id, word_id, correct) VALUES (?, ?, ?)', (session_id, word_id, correct))
-        self.commit()
-
-    # Initialize the database with sample data
-    def init(self, app):
-        with app.app_context():
+    def setup_tables(self):
+        with self.app.app_context():
             cursor = self.cursor()
-            self.setup_tables(cursor)
-            self.import_word_json(
-                cursor=cursor,
-                group_name='Core Verbs',
-                data_json_path='seed/data_verbs.json'
-            )
-            self.import_word_json(
-                cursor=cursor,
-                group_name='Core Adjectives',
-                data_json_path='seed/data_adjectives.json'
-            )
-            self.import_study_activities_json(
-                cursor=cursor,
-                data_json_path='seed/study_activities.json'
-            )
+            cursor.executescript('''
+                CREATE TABLE IF NOT EXISTS words (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    kanji TEXT NOT NULL,
+                    romaji TEXT NOT NULL,
+                    english TEXT NOT NULL,
+                    parts TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS groups (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    words_count INTEGER DEFAULT 0
+                );
+
+                CREATE TABLE IF NOT EXISTS word_groups (
+                    word_id INTEGER NOT NULL,
+                    group_id INTEGER NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (word_id, group_id),
+                    FOREIGN KEY (word_id) REFERENCES words(id),
+                    FOREIGN KEY (group_id) REFERENCES groups(id)
+                );
+
+                CREATE TABLE IF NOT EXISTS study_activities (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    url TEXT NOT NULL,
+                    preview_url TEXT
+                );
+
+                CREATE TABLE IF NOT EXISTS study_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    group_id INTEGER NOT NULL,
+                    study_activity_id INTEGER NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (group_id) REFERENCES groups(id),
+                    FOREIGN KEY (study_activity_id) REFERENCES study_activities(id)
+                );
+
+                CREATE TABLE IF NOT EXISTS word_review_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    word_id INTEGER NOT NULL,
+                    study_session_id INTEGER NOT NULL,
+                    correct BOOLEAN NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (word_id) REFERENCES words(id),
+                    FOREIGN KEY (study_session_id) REFERENCES study_sessions(id)
+                );
+            ''')
+            self.commit()
 
 # Create an instance of the Db class
 db = Db()
