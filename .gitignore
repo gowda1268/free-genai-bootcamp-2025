@@ -1,1 +1,6 @@
-.DS_Store
+venv/
+__pycache__/
+*.pyc
+audio/
+transcript_cache/
+vector_store.json
