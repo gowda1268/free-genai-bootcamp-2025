@@ -1,19 +1,62 @@
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
+version: '3.8'
 
 services:
-  ollama-server:
+  llm-server:
     image: ollama/ollama
-    container_name: ollama-server
+    container_name: llm-server
     ports:
-      - ${LLM_ENDPOINT_PORT:-8008}:11434
-    environment:
-      no_proxy: ${no_proxy}
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      LLM_MODEL_ID: ${LLM_MODEL_ID}
-      host_ip: ${host_ip}
+      - "8008:11434"
+    volumes:
+      - /c/Users/karthik/Desktop/we:/root/.ollama/models
+    command: ["ollama", "serve"]
+    entrypoint: ["/bin/sh", "-c", "sleep 5 && ollama serve"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  guardrails-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: guardrails
+    container_name: guardrails-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./guardrails:/app
+    depends_on:
+      llm-server:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  llm-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: llm-client
+    container_name: llm-client
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./llm-server:/app
+    depends_on:
+      guardrails-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
-  default:
+  app-network:
     driver: bridge
