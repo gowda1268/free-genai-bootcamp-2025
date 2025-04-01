@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Listening App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Language Listening App</h1>
+        
+        <div class="input-section">
+            <div class="youtube-section">
+                <h2>YouTube Video</h2>
+                <input type="text" id="youtube-url" placeholder="Enter YouTube URL">
+                <button onclick="app.transcribeVideo()">Transcribe Video</button>
+            </div>
+            
+            <div class="topic-section">
+                <h2>Generate Questions</h2>
+                <input type="text" id="topic" placeholder="Enter topic">
+                <button onclick="app.generateQuestions()">Generate Questions</button>
+            </div>
+        </div>
+
+        <div class="questions-container" id="questions-container">
+            <!-- Questions will be dynamically added here -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
