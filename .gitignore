@@ -4,3 +4,4 @@ __pycache__/
 audio/
 transcript_cache/
 vector_store.json
+venv/
